@@ -1,7 +1,7 @@
 /**
  * jQuery colorize
  * @author Zachary Ross (http://zacharyross.me)
- * @version 1.0
+ * @version 1.2
  * @copyright 2017 Zachary Ross
  * @description Gives color to text
  */
@@ -56,6 +56,7 @@
             this._wrapText(this.el);
             this._parseElement();
             this._determineStart();
+            //console.log(this.se)
             this._expand();
 
         },
@@ -134,7 +135,10 @@
                     this.rsi++;
 
                     // if that was the final tag, exit
-                    if(this.rsi + 1 >= this.se.length - 1) return;
+                    if(this.rsi == this.se.length - 1) {
+                        this.rst += this.se[this.rsi].txt
+                        return;
+                    }
 
                     elem = this.se[this.rsi];
                 }
@@ -151,6 +155,8 @@
                 this.rst += elem.txt;
 
             }
+
+            console.log(this._finalHTML())
         },
 
         _expandLeft: function() {
@@ -248,7 +254,6 @@
         _wrapText: function(elem) {
             var t = this;
             $(elem).children().each(function (){
-
                 t._wrapText($(this))
             })
             elem.contents().filter(function() {
