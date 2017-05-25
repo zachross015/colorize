@@ -60,6 +60,10 @@
 
         },
 
+        /*
+         * determine where the functon will start
+         * i eventually want this to be from any point in the sequence
+         */
         _determineStart: function() {
             if (this.opt.direction == 'backwards') {
                 this.lsi = this.se.length - 1;
@@ -70,6 +74,9 @@
             }
         },
 
+        /*
+         *  go in each direction until there is nothing left in either of them
+         */
         _expand: function() {
 
             // Stop if there is nothing left, continue otherwise
@@ -94,6 +101,7 @@
                     if(!(t.rsc && t.lsc)) {
                         t._expand();
                     } else {
+                        // get rid of any scragglers
                         $('.colored').filter(function(){return $(this).text().length == 0}).remove()
                         t.opt.callback();
 
@@ -103,11 +111,16 @@
 
         },
 
-        // Add the text to the tag, or move tags if there is another tag
-        // already there. Only do this if the side has not been
-        // completed
+        /*
+         *  Add the text to the tag, or move tags if there is another tag
+         *  already there. Only do this if the side has not been
+         *  completed
+         */
         _expandRight: function() {
 
+            // When moving to the right, swap the other 'colored' tag with the
+            // next element. If the next element is the closing tag for it, then
+            // delete both of them
             var swapped = false;
             if($(this.se[this.rsi].txt).prop('className') == 'colored') {
 
@@ -122,6 +135,9 @@
 
             if(this.rsi == this.se.length) {return;}
 
+            // if the next element is a tag, then go through the next few elemtents
+            // until the sequence is no longer in a tag. Then place open and
+            // closing tags for the colorizer around the outer tags
             if (this.se[this.rsi].type == 'tag' && !swapped){
 
                 this.rst += '</span>'
@@ -133,17 +149,25 @@
                         return;
                     }
                 }
+
+                // go back one since the last tag will be the span needed to
+                // traverse the sequence
                 this.rsi--;
                 this.rst += this._tagHTML();
 
             } else {
+
                 this.rst += this.se[this.rsi].txt;
+
             }
 
             this.rsi++;
 
         },
 
+        /*
+         *  do the same thing as expandRight, except go left
+         */
         _expandLeft: function() {
             var swapped = false;
             var converged = false;
@@ -154,14 +178,15 @@
                 if(this.se[this.lsi].type == 'tag') {
                     if($(this.se[this.lsi].txt).prop('className') == 'colored') {
                         this.se.splice(this.lsi - 1, 2)
+                        // only subtract one from this since the ending will
+                        // automatically subtract one anyways
                         this.lsi -= 1;
+                        // subtract 2 since 2 items are being removed
                         this.rsi -= 2;
                         converged = true;
                     }
                 }
             }
-
-
 
             if (this.se[this.lsi].type == 'tag' && !swapped){
 
@@ -191,10 +216,16 @@
             this.se[ind2] = temp
         },
 
+        /*
+         * will check if things are on the screen eventually
+         */
         _isVisible: function() {
             return true;
         },
 
+        /*
+         *  html for the span being used
+         */
         _tagHTML: function() {
             var style = 'display:inline;pointer-events:none;';
             style += 'color:' + this.opt.color + ';';
