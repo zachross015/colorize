@@ -275,72 +275,24 @@
          */
         _parseElement: function() {
             var html = this.el.html();
-            var startIndex = 0;
+            var str = '';
             for(var i = 0; i < html.length; i++) {
-                i = this._storeElement(i);
-            }
-        },
-
-        /*
-         *  Checks the which element is at the current index and decides the
-         *  proper queue type for it. Mainly a buffer until I shrink the other
-         *  queue functions into one
-         */
-        _storeElement: function(index) {
-            var html = this.el.html();
-            if(html.charAt(index) == '<') {
-                index = this._storeTag(index)
-            } else if(html.charAt(index) == '&') {
-                index = this._storeEntity(index);
-            } else {
-                index = this._storeText(index);
-            }
-            return index
-        },
-
-        /*
-         * Finds the range for text in the html and appends it to the queue
-         */
-        _storeText: function(index) {
-            var html = this.el.html()
-            var type = 'text'
-            if(html.charAt(index) != '<' && html.charAt(index) != '&') {
-                this.se.push({txt: html.charAt(index), type:type});
-                return index;
-            }
-        },
-
-        /*
-         * Finds the range for a tag in the html and appends it to the queue
-         */
-        _storeTag: function(index) {
-            var html = this.el.html()
-            var type = 'tag'
-            var startIndex = index;
-            for(; index < html.length; index++) {
-                if(html.charAt(index) == '>') {
-                    var text = html.slice(startIndex, index + 1)
-                    this.se.push({txt: text, type:type})
-                    return index;
-                }
-            }
-        },
-
-        /*
-         * Finds the range for an html entity in the html and appends it to queue
-         */
-        _storeEntity: function(index) {
-            var html = this.el.html()
-            var type = 'entity'
-            var startIndex = index;
-            for(; index < html.length; index++) {
-                if(html.charAt(index) == ';') {
-                    this.se.push({txt: html.slice(startIndex, index + 1), type:type})
-                    return index;
+                str += html.charAt(i);
+                if(str.charAt(0) == '<') {
+                    if(/<[^>]*>/.test(str)) {
+                        this.se.push({txt: str, type:'tag'});
+                        str = '';
+                    }
+                } else if(str.charAt(0) == '&') {
+                    if(/&[^;]*;/.test(str)) {
+                        this.se.push({txt: str, type:'entity'});
+                        str = '';
+                    }
+                } else {
+                    this.se.push({txt: str, type: 'text'})
+                    str = '';
                 }
             }
         }
-
     }
-
 }(jQuery));
