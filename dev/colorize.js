@@ -19,7 +19,7 @@
             var $elData = $(this).data('colorize');
             if($elData !== undefined) {
                 // Remove any previously associated data
-                //clearTimeout($elData.iterate);
+                clearTimeout($elData.iterate);
                 $el.removeData('colorize')
             }
             $el.data('colorize', new $.colorize($el, opt));
@@ -103,7 +103,7 @@
                     } else {
                         // get rid of any scragglers
                         $('.colored').filter(function(){return $(this).text().length == 0}).remove()
-                        t.opt.callback();
+                        t.opt.callback.call(e);
 
                     }
 
