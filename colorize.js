@@ -1,7 +1,7 @@
 /**
  * jQuery colorize
  * @author Zachary Ross (http://zacharyross.me)
- * @version 1.2
+ * @version 1.3
  * @copyright 2017 Zachary Ross
  * @description Gives color to text
  */
@@ -42,8 +42,8 @@
 
         this.lsc        = false; // left side complete
         this.rsc        = false; // right side complete
-        this.lst        = '</span>'; // left side html
-        this.rst        = this._tagHTML(); // right side html
+        this.lst        = ''; // left side html
+        this.rst        = ''; // right side html
         this.lsi        = 0; // left side index
         this.rsi        = 0; // right side index
 
@@ -56,18 +56,17 @@
             this._wrapText(this.el);
             this._parseElement();
             this._determineStart();
-            //console.log(this.se)
             this._expand();
 
         },
 
         _determineStart: function() {
             if (this.opt.direction == 'backwards') {
-                this.lsi = this.se.length;
-                this.rsi = this.se.length;
+                this.lsi = this.se.length - 1;
+                this.rsi = this.se.length - 1;
             } else {
                 this.lsi = 0;
-                this.rsi = -1;
+                this.rsi = 0;
             }
         },
 
@@ -95,7 +94,7 @@
                     if(!(t.rsc && t.lsc)) {
                         t._expand();
                     } else {
-                        //t._normalize(e);
+                        $('.colored').filter(function(){return $(this).text().length == 0}).remove()
                         t.opt.callback();
 
                     }
@@ -109,108 +108,81 @@
         // completed
         _expandRight: function() {
 
-            // increment
-            this.rsi++;
-
-            // if the next element is using a previously colored item, move it
-            // to the right one
+            var swapped = false;
             if($(this.se[this.rsi].txt).prop('className') == 'colored') {
+
                 this._swap(this.rsi, this.rsi + 1)
+                swapped = true;
+
+                if(this.se[this.rsi].txt == '</span>') {
+                    this.se.splice(this.rsi, 2)
+                }
+
             }
 
-            var elem = this.se[this.rsi];
+            if(this.rsi == this.se.length) {return;}
 
-            if(elem.type == 'tag') {
+            if (this.se[this.rsi].type == 'tag' && !swapped){
 
-                // remove the colored tag, since the two tags are swapped,
-                // we remove the one at the next index
-                if(elem.txt == '</span>') {
-                    this.se.splice(this.rsi + 1, 1);
-                }
+                this.rst += '</span>'
 
-                // otherwise, iterate until all tags have been exited
                 while(this.se[this.rsi + 1].type == 'tag') {
-
-                    this.rst += elem.txt;
+                    this.rst += this.se[this.rsi].txt;
                     this.rsi++;
-
-                    // if that was the final tag, exit
-                    if(this.rsi == this.se.length - 1) {
-                        this.rst += this.se[this.rsi].txt
+                    if(this.rsi + 1 == this.se.length - 1) {
                         return;
                     }
-
-                    elem = this.se[this.rsi];
                 }
-
-                // go back one since the second to last tag would be the opening
-                // for the next colored tag
                 this.rsi--;
-
-                // Start the new tag
                 this.rst += this._tagHTML();
 
             } else {
-
-                this.rst += elem.txt;
-
+                this.rst += this.se[this.rsi].txt;
             }
 
-            console.log(this._finalHTML())
+            this.rsi++;
+
         },
 
         _expandLeft: function() {
-
-            // increment backwards
-            this.lsi--;
-
-            // if the next element is using a previously colored item, move it
-            // to the left one
+            var swapped = false;
+            var converged = false;
             if(this.se[this.lsi].txt == '</span>') {
+
                 this._swap(this.lsi, this.lsi - 1)
+                swapped = true;
+                if(this.se[this.lsi].type == 'tag') {
+                    if($(this.se[this.lsi].txt).prop('className') == 'colored') {
+                        this.se.splice(this.lsi - 1, 2)
+                        this.lsi -= 1;
+                        this.rsi -= 2;
+                        converged = true;
+                    }
+                }
             }
 
-            var elem = this.se[this.lsi];
 
-            if(elem.type == 'tag') {
 
-                // remove the colored tag and its closing tag, increment only
-                // once since the program will automatically decrement a second
-                // time once the function is run again
-                if($(elem.txt).prop('className') == 'colored') {
-                    this.se.splice(this.lsi - 1, 2);
-                    this.lsi--;
-                    return;
-                }
+            if (this.se[this.lsi].type == 'tag' && !swapped){
 
-                // Since evertyhing is added in backwards, we have to store each
-                // text
-                var str = '';
+                var string = this._tagHTML();
 
-                // Iterate until all tags have been exited
-                while(elem.type == 'tag') {
-                    str = elem.txt + str;
+                while(this.se[this.lsi - 1].type == 'tag') {
+                    string = this.se[this.lsi].txt + string;
                     this.lsi--;
 
-                    // if that was the final tag, exit
-                    if(this.lsi <= 0) return;
-
-                    elem = this.se[this.lsi];
-
+                    if(this.lsi == 0) {
+                        return;
+                    }
                 }
+                this.lsi++;
+                this.lst = '</span>' + string + this.lst;
 
-                // the mose recent tag will have been the closing to another
-                // colored tag, so decrement 2 and the function will go back and
-                // deal with the closing tag
-                this.lsi += 2;
+            } else if (!converged) {
 
-                // add in all of the tags
-                this.lst =  str + this._tagHTML() + this.lst;
-
-            } else {
-                this.lst =  elem.txt + this.lst;
+                this.lst = this.se[this.lsi].txt + this.lst;
             }
-
+            this.lsi--;
         },
 
         _swap: function(ind1, ind2) {
@@ -246,9 +218,12 @@
          *  Make the html that will be exchanged with the current html
          */
         _finalHTML: function() {
-            var leftSide = this._getHTML(0, this.lsi);
-            var rightSide = this._getHTML(this.rsi + 1, this.se.length);
-            return leftSide + this._tagHTML() + this.lst + this.rst + '</span>' + rightSide;
+            var leftSide = this._getHTML(0, this.lsi + 1);
+            var rightSide = this._getHTML(this.rsi, this.se.length);
+            return leftSide
+                + this._tagHTML() + this.lst + '</span>'
+                + this._tagHTML() + this.rst + '</span>'
+                + rightSide;
         },
 
         _wrapText: function(elem) {
@@ -257,7 +232,9 @@
                 t._wrapText($(this))
             })
             elem.contents().filter(function() {
-                return this.nodeType === 3 && this.parentElement.className != 'colored'
+                return this.nodeType === 3
+                    && this.parentElement.className != 'colored'
+                    && $(this).text().replace(/\s/g, '').length > 0;
             }).wrap("<span class = 'colored'></span>")
 
         },
