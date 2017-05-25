@@ -2,9 +2,9 @@
 ###### A jQuery script for adding some <span style = 'color:#98c379;'>color</span> to your life.
 
 ## Table of contents
- - [Overview](#Overview)
- - [Setup](#Setup)
- - [Options](#Options)
+ - [Overview](#overview)
+ - [Setup](#setup)
+ - [Options](#options)
 
 ## Overview
 A small jquery plugin for bringing some color to your websites. Colorize provides a friendly and easy way to shoot colors across your words.
