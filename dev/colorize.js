@@ -19,7 +19,7 @@
             var $elData = $(this).data('colorize');
             if($elData !== undefined) {
                 // Remove any previously associated data
-                clearTimeout($elData.iterate);
+                //clearTimeout($elData.iterate);
                 $el.removeData('colorize')
             }
             $el.data('colorize', new $.colorize($el, opt));
@@ -32,7 +32,6 @@
             textDecoration: 'line-through',
             direction:      'forwards',
             speed:          15,
-            range:          undefined,
             callback:       function() {}
         }
 
@@ -53,6 +52,7 @@
     $.colorize.prototype = {
 
         _init: function() {
+
             this._wrapText(this.el);
             this._parseElement();
             this._determineStart();
@@ -67,9 +67,9 @@
         _determineStart: function() {
             if (this.opt.direction == 'backwards') {
                 this.lsi = this.se.length - 1;
-                this.rsi = this.se.length - 1;
+                this.rsi = this.se.length;
             } else {
-                this.lsi = 0;
+                this.lsi = -1;
                 this.rsi = 0;
             }
         },
