@@ -29,7 +29,7 @@
     $.colorize = function(el, opt) {
         this.o = {
             color:          'white',
-            textDecoration: 'line-through',
+            textDecoration: 'none',
             direction:      'forwards',
             speed:          15,
             callback:       function() {}
