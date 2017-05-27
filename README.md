@@ -32,4 +32,5 @@ A small jquery plugin for bringing some color to your websites. Colorize provide
 | textDecoration | (string) Text Decoration(s) to be applied to all element being affected. | 'none'
 | direction      | (string) Direction for the colorizer to go in .Forward and backwards are the only ones that work right now. | 'forwards'
 | speed          | (number) Speed (in milliseconds) for each element to take effect. | 15
+| lock           | (boolean) Prevent any other coloring from interfering with this until it is completed | false
 | callback       | (function) Function to be called on completion. |empty function

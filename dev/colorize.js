@@ -17,12 +17,18 @@
             // Set the data associated to this element in memory
             var $el = $(this);
             var $elData = $(this).data('colorize');
-            if($elData !== undefined) {
-                // Remove any previously associated data
-                clearTimeout($elData.iterate);
-                $el.removeData('colorize')
+            if(opt.lock) {
+                if($elData === undefined) {
+                    $el.data('colorize', new $.colorize($el, opt));
+                }
+            } else {
+                if($elData !== undefined) {
+                    // Remove any previously associated data
+                    clearTimeout($elData.iterate);
+                    $el.removeData('colorize')
+                }
+                $el.data('colorize', new $.colorize($el, opt));
             }
-            $el.data('colorize', new $.colorize($el, opt));
         })
     }
 
@@ -101,7 +107,9 @@
                     if(!(t.rsc && t.lsc)) {
                         t._expand();
                     } else {
-                        // get rid of any scragglers
+                        // get rid of any scragglers and clear all data
+                        clearTimeout(e.iterate);
+                        e.removeData('colorize')
                         $('.colored').filter(function(){return $(this).text().length == 0}).remove()
                         t.opt.callback.call(e);
 

@@ -1,7 +1,7 @@
 /**
  * jQuery colorize
  * @author Zachary Ross (http://zacharyross.me)
- * @version 1.0
+ * @version 1.3
  * @copyright 2017 Zachary Ross
  * @description Gives color to text
  */
@@ -17,34 +17,41 @@
             // Set the data associated to this element in memory
             var $el = $(this);
             var $elData = $(this).data('colorize');
-            if($elData !== undefined) {
-                // Remove any previously associated data
-                clearTimeout($elData.iterate);
-                $el.removeData('colorize')
+            if (opt.lock) {
+                if ($elData === undefined) {
+                    $el.data('colorize', new $.colorize($el, opt));
+                }
+            } else {
+                if ($elData !== undefined) {
+                    clearTimeout($elData.iterate);
+                    $el.removeData('colorize')
+                }
+                $el.data('colorize', new $.colorize($el, opt));
             }
-            $el.data('colorize', new $.colorize($el, opt));
+
+
         })
     }
 
     $.colorize = function(el, opt) {
         this.o = {
-            color:          'white',
-            textDecoration: 'none',
-            direction:      'forwards',
-            speed:          15,
-            callback:       function() {}
+            color: 'white',
+            textDecoration: 'line-through',
+            direction: 'forwards',
+            speed: 15,
+            callback: function() {}
         }
 
-        this.el         = el;
-        this.opt        = $.extend({}, this.o, opt);
-        this.se         = [] // Stored elements
+        this.el = el;
+        this.opt = $.extend({}, this.o, opt);
+        this.se = [] // Stored elements
 
-        this.lsc        = false; // left side complete
-        this.rsc        = false; // right side complete
-        this.lst        = ''; // left side html
-        this.rst        = ''; // right side html
-        this.lsi        = 0; // left side index
-        this.rsi        = 0; // right side index
+        this.lsc = false; // left side complete
+        this.rsc = false; // right side complete
+        this.lst = ''; // left side html
+        this.rst = ''; // right side html
+        this.lsi = 0; // left side index
+        this.rsi = 0; // right side index
 
         this._init();
     }
@@ -80,12 +87,12 @@
         _expand: function() {
 
             // Stop if there is nothing left, continue otherwise
-            if(this.rsi >= this.se.length - 1) {
+            if (this.rsi >= this.se.length - 1) {
                 this.rsc = true;
             } else {
                 this._expandRight();
             }
-            if(this.lsi < 1) {
+            if (this.lsi < 1) {
                 this.lsc = true;
             } else {
                 this._expandLeft();
@@ -97,15 +104,18 @@
             var t = this;
             var e = this.el;
             this.iterate = setTimeout(function() {
-                    // rinse and repeat
-                    if(!(t.rsc && t.lsc)) {
-                        t._expand();
-                    } else {
-                        // get rid of any scragglers
-                        $('.colored').filter(function(){return $(this).text().length == 0}).remove()
-                        t.opt.callback.call(e);
+                // rinse and repeat
+                if (!(t.rsc && t.lsc)) {
+                    t._expand();
+                } else {
+                    // get rid of any scragglers
+                    e.removeData('colorize')
+                    $('.colored').filter(function() {
+                        return $(this).text().length == 0
+                    }).remove()
+                    t.opt.callback.call(e);
 
-                    }
+                }
 
             }, this.opt.speed)
 
@@ -122,30 +132,32 @@
             // next element. If the next element is the closing tag for it, then
             // delete both of them
             var swapped = false;
-            if($(this.se[this.rsi].txt).prop('className') == 'colored') {
+            if ($(this.se[this.rsi].txt).prop('className') == 'colored') {
 
                 this._swap(this.rsi, this.rsi + 1)
                 swapped = true;
 
-                if(this.se[this.rsi].txt == '</span>') {
+                if (this.se[this.rsi].txt == '</span>') {
                     this.se.splice(this.rsi, 2)
                 }
 
             }
 
-            if(this.rsi == this.se.length) {return;}
+            if (this.rsi == this.se.length) {
+                return;
+            }
 
             // if the next element is a tag, then go through the next few elemtents
             // until the sequence is no longer in a tag. Then place open and
             // closing tags for the colorizer around the outer tags
-            if (this.se[this.rsi].type == 'tag' && !swapped){
+            if (this.se[this.rsi].type == 'tag' && !swapped) {
 
                 this.rst += '</span>'
 
-                while(this.se[this.rsi + 1].type == 'tag') {
+                while (this.se[this.rsi + 1].type == 'tag') {
                     this.rst += this.se[this.rsi].txt;
                     this.rsi++;
-                    if(this.rsi + 1 == this.se.length - 1) {
+                    if (this.rsi + 1 == this.se.length - 1) {
                         return;
                     }
                 }
@@ -171,12 +183,12 @@
         _expandLeft: function() {
             var swapped = false;
             var converged = false;
-            if(this.se[this.lsi].txt == '</span>') {
+            if (this.se[this.lsi].txt == '</span>') {
 
                 this._swap(this.lsi, this.lsi - 1)
                 swapped = true;
-                if(this.se[this.lsi].type == 'tag') {
-                    if($(this.se[this.lsi].txt).prop('className') == 'colored') {
+                if (this.se[this.lsi].type == 'tag') {
+                    if ($(this.se[this.lsi].txt).prop('className') == 'colored') {
                         this.se.splice(this.lsi - 1, 2)
                         // only subtract one from this since the ending will
                         // automatically subtract one anyways
@@ -188,15 +200,15 @@
                 }
             }
 
-            if (this.se[this.lsi].type == 'tag' && !swapped){
+            if (this.se[this.lsi].type == 'tag' && !swapped) {
 
                 var string = this._tagHTML();
 
-                while(this.se[this.lsi - 1].type == 'tag') {
+                while (this.se[this.lsi - 1].type == 'tag') {
                     string = this.se[this.lsi].txt + string;
                     this.lsi--;
 
-                    if(this.lsi == 0) {
+                    if (this.lsi == 0) {
                         return;
                     }
                 }
@@ -239,7 +251,7 @@
          */
         _getHTML: function(index1, index2) {
             var html = '';
-            for(var i = index1; i < index2; i++) {
+            for (var i = index1; i < index2; i++) {
                 html += this.se[i].txt;
             }
             return html;
@@ -251,22 +263,22 @@
         _finalHTML: function() {
             var leftSide = this._getHTML(0, this.lsi + 1);
             var rightSide = this._getHTML(this.rsi, this.se.length);
-            return leftSide
-                + this._tagHTML() + this.lst + '</span>'
-                + this._tagHTML() + this.rst + '</span>'
-                + rightSide;
+            return leftSide +
+                this._tagHTML() + this.lst + '</span>' +
+                this._tagHTML() + this.rst + '</span>' +
+                rightSide;
         },
 
         _wrapText: function(elem) {
             var t = this;
-            $(elem).children().each(function (){
+            $(elem).children().each(function() {
                 t._wrapText($(this))
             })
             elem.contents().filter(function() {
-                return this.nodeType === 3
-                    && this.parentElement.className != 'colored'
-                    && $(this).text().replace(/\s/g, '').length > 0;
-            }).wrap("<span class = 'colored'></span>")
+                return this.nodeType === 3 &&
+                    this.parentElement.className != 'colored' &&
+                    $(this).text().replace(/\s/g, '').length > 0;
+            }).wrap("<span class = 'colored' style = 'display:inline'></span>")
 
         },
 
@@ -276,20 +288,29 @@
         _parseElement: function() {
             var html = this.el.html();
             var str = '';
-            for(var i = 0; i < html.length; i++) {
+            for (var i = 0; i < html.length; i++) {
                 str += html.charAt(i);
-                if(str.charAt(0) == '<') {
-                    if(/<[^>]*>/.test(str)) {
-                        this.se.push({txt: str, type:'tag'});
+                if (str.charAt(0) == '<') {
+                    if (/<[^>]*>/.test(str)) {
+                        this.se.push({
+                            txt: str,
+                            type: 'tag'
+                        });
                         str = '';
                     }
-                } else if(str.charAt(0) == '&') {
-                    if(/&[^;]*;/.test(str)) {
-                        this.se.push({txt: str, type:'entity'});
+                } else if (str.charAt(0) == '&') {
+                    if (/&[^;]*;/.test(str)) {
+                        this.se.push({
+                            txt: str,
+                            type: 'entity'
+                        });
                         str = '';
                     }
                 } else {
-                    this.se.push({txt: str, type: 'text'})
+                    this.se.push({
+                        txt: str,
+                        type: 'text'
+                    })
                     str = '';
                 }
             }
